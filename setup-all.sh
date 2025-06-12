@@ -1,230 +1,227 @@
 #!/bin/bash
 
-# THIS IS THE CORRECT SETUP-ALL.SH FILE - UPDATED VERSION
-# Master Setup Script for Claude Code on Ubuntu
-# This script ensures all files are present and properly set up
+# Claude Project Creator - Main Setup Script
+# Creates intelligent project templates with customized AI guidelines
 
 set -e
 
-echo "🚀 Claude Code Complete Setup"
-echo "============================="
+echo "🚀 Claude Project Creator Setup"
+echo "================================="
+echo "Create intelligent project templates with customized AI guidelines in minutes."
 
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Use current directory
 SCRIPT_DIR="$(pwd)"
 cd "$SCRIPT_DIR"
 
-echo -e "\n${YELLOW}Checking required files...${NC}"
-
-# List of required files with their expected names after download
-REQUIRED_FILES=(
-    "install-prerequisites.sh"
-    "setup-claude-code.sh"
-    "intellij-mcp-server.js"
-    "mcp-test-client.py"
-)
-
-# Alternative names that might be downloaded
-declare -A ALT_NAMES=(
-    ["install-prerequisites.sh"]="install-prerequisites.txt"
-    ["setup-claude-code.sh"]="setup-claude-code.txt"
-    ["mcp-test-client.py"]="mcp-test-client.txt"
-    ["setup-all.sh"]="master-setup-script.txt"
-)
-
-# Function to check and rename files
-check_and_rename_file() {
-    local expected_name="$1"
-
-    if [ -f "$expected_name" ]; then
-        echo -e "${GREEN}✓ Found: $expected_name${NC}"
+# Function to check if Claude Code is installed
+check_claude_code() {
+    if command -v claude &> /dev/null; then
+        echo -e "${GREEN}✓ Claude Code CLI detected${NC}"
         return 0
+    else
+        echo -e "${YELLOW}! Claude Code CLI not found${NC}"
+        return 1
     fi
-
-    # Check alternative names
-    if [ -n "${ALT_NAMES[$expected_name]}" ]; then
-        for alt_name in ${ALT_NAMES[$expected_name]}; do
-            if [ -f "$alt_name" ]; then
-                echo -e "${YELLOW}→ Renaming $alt_name to $expected_name${NC}"
-                mv "$alt_name" "$expected_name"
-                return 0
-            fi
-        done
-    fi
-
-    return 1
 }
 
-# Check if all files exist (with renaming support)
-MISSING_FILES=()
-for file in "${REQUIRED_FILES[@]}"; do
-    if ! check_and_rename_file "$file"; then
-        MISSING_FILES+=("$file")
+# Function to detect OS
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)     echo "linux";;
+        Darwin*)    echo "macos";;
+        CYGWIN*|MINGW*|MSYS*) echo "windows";;
+        *)          echo "unknown";;
+    esac
+}
+
+echo -e "\n${BLUE}🔍 Checking your environment...${NC}"
+
+# Check required files
+echo -e "\n${YELLOW}Checking required files...${NC}"
+
+CORE_FILES=(
+    "install-prerequisites.sh"
+    "setup-claude-code.sh" 
+    "new-claude.py"
+)
+
+MISSING_CORE=()
+for file in "${CORE_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        echo -e "${GREEN}✓ Found: $file${NC}"
+    else
+        MISSING_CORE+=("$file")
         echo -e "${RED}✗ Missing: $file${NC}"
     fi
 done
 
-# Check for this script with its alternative name
-if [ ! -f "setup-all.sh" ] && [ -f "master-setup-script.txt" ]; then
-    echo -e "${YELLOW}→ Renaming master-setup-script.txt to setup-all.sh${NC}"
-    mv master-setup-script.txt setup-all.sh
-fi
-
-if [ ${#MISSING_FILES[@]} -gt 0 ]; then
-    echo -e "\n${RED}Error: Missing required files!${NC}"
-    echo "Please ensure all artifact files are saved in the current directory:"
-    for file in "${MISSING_FILES[@]}"; do
+if [ ${#MISSING_CORE[@]} -gt 0 ]; then
+    echo -e "\n${RED}Error: Missing essential files!${NC}"
+    echo "Required files:"
+    for file in "${MISSING_CORE[@]}"; do
         echo "  - $file"
     done
-    echo -e "\n${YELLOW}Note: Files may download with .txt extension. They will be renamed automatically if found.${NC}"
     exit 1
 fi
 
-# Make all scripts executable
-echo -e "\n${YELLOW}Making scripts executable...${NC}"
-chmod +x install-prerequisites.sh
-chmod +x setup-claude-code.sh
-chmod +x mcp-test-client.py
-chmod +x intellij-mcp-server.js
+# Make scripts executable
+chmod +x install-prerequisites.sh setup-claude-code.sh new-claude.py
+if [ -f "mcp/setup-mcp-server.sh" ]; then chmod +x mcp/setup-mcp-server.sh; fi
 
-# Run the setup
-echo -e "\n${YELLOW}Starting setup process...${NC}"
+# Detect OS
+OS=$(detect_os)
+echo -e "${GREEN}✓ Detected OS: $OS${NC}"
 
-# Step 1: Install prerequisites
-echo -e "\n${GREEN}Step 1: Installing prerequisites...${NC}"
+# Check Claude Code installation
+echo -e "\n${BLUE}🤖 Checking Claude setup...${NC}"
+
+CLAUDE_DETECTED=false
+if check_claude_code; then
+    CLAUDE_DETECTED=true
+    echo -e "${GREEN}Great! You have Claude Code CLI installed.${NC}"
+else
+    echo -e "\n${YELLOW}Claude Code CLI not detected.${NC}"
+    echo ""
+    echo "Choose your Claude setup approach:"
+    echo ""
+    echo "  ${GREEN}A) Auto-install Claude Code CLI${NC} (Recommended)"
+    echo "     • Automatically installs Claude Code CLI via npm"
+    echo "     • Best for developers with Claude Pro/API access"
+    echo "     • Most features and fastest performance"
+    echo ""
+    echo "  ${YELLOW}B) Claude Desktop + MCP Server${NC} ⚠️ (Work in Progress)"
+    echo "     • Best for Windows/Mac users without Claude Pro/API"  
+    echo "     • Basic MCP setup available now"
+    echo "     • Full integration coming soon"
+    echo ""
+    echo "  ${BLUE}C) Manual Integration${NC}"
+    echo "     • For custom setups"
+    echo "     • Copy CLAUDE.md content to your preferred Claude interface"
+    echo ""
+    echo "  ${RED}0) Skip Claude setup${NC}"
+    echo "     • Continue without Claude Code installation"
+    echo ""
+    
+    while true; do
+        read -p "Which option would you like? [A/B/C/0]: " choice
+        case $choice in
+            [Aa]* )
+                echo -e "\n${GREEN}Setting up Claude Code CLI with auto-installation...${NC}"
+                echo ""
+                echo "This will:"
+                echo "1. Check for Node.js/npm prerequisites"
+                echo "2. Install Claude Code CLI automatically"
+                echo "3. Set up the project creator tool"
+                echo ""
+                echo -e "${YELLOW}Note: You'll still need Claude Pro or API access to use Claude Code.${NC}"
+                echo "Visit https://claude.ai to sign up if you haven't already."
+                echo ""
+                break
+                ;;
+            [Bb]* )
+                echo -e "\n${YELLOW}Setting up Claude Desktop + MCP Server...${NC}"
+                echo ""
+                echo "⚠️  Note: Full MCP integration is work in progress."
+                echo "Basic MCP server setup will be included."
+                echo ""
+                break
+                ;;
+            [Cc]* )
+                echo -e "\n${BLUE}Setting up for manual integration...${NC}"
+                echo ""
+                echo "You'll be able to:"
+                echo "• Create CLAUDE.md files with the new-claude command"
+                echo "• Copy content to your preferred Claude interface"
+                echo ""
+                break
+                ;;
+            [0]* )
+                echo -e "\n${RED}Skipping Claude setup...${NC}"
+                echo ""
+                echo "You can still use the project creator to generate CLAUDE.md files"
+                echo "and use them manually with any Claude interface."
+                echo ""
+                break
+                ;;
+            * )
+                echo "Please answer A, B, C, or 0."
+                ;;
+        esac
+    done
+fi
+
+# Install prerequisites
+echo -e "\n${GREEN}📦 Step 1: Installing prerequisites...${NC}"
 ./install-prerequisites.sh
 
-# Step 2: Run main setup
-echo -e "\n${GREEN}Step 2: Running main setup...${NC}"
+# Run main setup
+echo -e "\n${GREEN}⚙️  Step 2: Setting up project creator...${NC}"
 ./setup-claude-code.sh
 
-# Add new-claude alias to bashrc
-echo -e "\n${YELLOW}Setting up new-claude command...${NC}"
-if ! grep -q "alias new-claude=" ~/.bashrc; then
-    echo "" >> ~/.bashrc
-    echo "# Claude project configuration generator" >> ~/.bashrc
-    echo "alias new-claude='$SCRIPT_DIR/new-claude.sh'" >> ~/.bashrc
-    echo -e "${GREEN}✓ Added new-claude alias to ~/.bashrc${NC}"
+# Verify installation
+echo -e "\n${GREEN}✅ Step 3: Verifying installation...${NC}"
+if grep -q "alias new-claude=" ~/.bash_aliases 2>/dev/null; then
+    echo -e "${GREEN}✓ new-claude command installed successfully${NC}"
 else
-    echo -e "${YELLOW}✓ new-claude alias already exists in ~/.bashrc${NC}"
+    echo -e "${YELLOW}! Warning: new-claude alias not found in ~/.bash_aliases${NC}"
 fi
 
-# Create verification script
-echo -e "\n${YELLOW}Creating verification script...${NC}"
-cat > verify-setup.sh << 'EOF'
-#!/bin/bash
-
-# Verification script for Claude Code setup
-
-echo "🔍 Verifying Claude Code Setup..."
-echo "================================"
-
-# Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-ERRORS=0
-
-# Check Node.js
-if command -v node &> /dev/null; then
-    echo -e "${GREEN}✓ Node.js: $(node --version)${NC}"
+# Check if Claude Code CLI was installed
+if command -v claude &> /dev/null; then
+    echo -e "${GREEN}✓ Claude Code CLI is now available${NC}"
+    CLAUDE_DETECTED=true
 else
-    echo -e "${RED}✗ Node.js not installed${NC}"
-    ((ERRORS++))
+    echo -e "${YELLOW}! Claude Code CLI not detected${NC}"
 fi
 
-# Check Python
-if command -v python3 &> /dev/null; then
-    echo -e "${GREEN}✓ Python: $(python3 --version)${NC}"
-else
-    echo -e "${RED}✗ Python3 not installed${NC}"
-    ((ERRORS++))
-fi
-
-# Check MCP server
-if [ -f "$HOME/mcp-servers/intellij-mcp-server.js" ]; then
-    echo -e "${GREEN}✓ MCP server installed${NC}"
-else
-    echo -e "${RED}✗ MCP server not found${NC}"
-    ((ERRORS++))
-fi
-
-# Check for helper scripts
-if [ -f "$HOME/.local/bin/mcp-start" ] && [ -f "$HOME/.local/bin/mcp-test" ] && [ -f "$HOME/.local/bin/mcp-quick-test" ]; then
-    echo -e "${GREEN}✓ Helper commands installed${NC}"
-else
-    echo -e "${YELLOW}! Helper commands not found in PATH${NC}"
-fi
-
-# Run quick test
+# Final summary
+echo -e "\n${GREEN}🎉 Setup Complete!${NC}"
 echo ""
-echo "Running quick test..."
-if [ -f "$HOME/mcp-servers/quick-test.sh" ]; then
-    if $HOME/mcp-servers/quick-test.sh; then
-        echo -e "${GREEN}✓ MCP server is working correctly${NC}"
-    else
-        echo -e "${YELLOW}! MCP server test failed (setup completed anyway)${NC}"
-    fi
-else
-    echo -e "${YELLOW}! Quick test not available yet${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo -e "${GREEN}✨ Your Claude Project Creator is ready!${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "🚀 Quick Start:"
+echo ""
+echo "  1. Activate the command:"
+echo -e "     ${BLUE}source ~/.bash_aliases${NC}"
+echo ""
+echo "  2. Create your first project:"
+echo -e "     ${BLUE}new-claude my-awesome-project${NC}"
+echo ""
+echo "  3. Follow the interactive prompts"
+echo ""
+echo "📋 Available Commands:"
+echo -e "  ${GREEN}new-claude <directory>${NC}    - Create project with AI guidelines"
+
+# Show MCP commands if available
+if [ -f "mcp/setup-mcp-server.sh" ]; then
+    echo -e "  ${GREEN}mcp-start <project-path>${NC}  - Start MCP server (Desktop Claude)"
+    echo -e "  ${GREEN}mcp-test <project-path>${NC}   - Test MCP server"
+    echo -e "  ${GREEN}mcp-quick-test${NC}            - Verify MCP installation"
 fi
 
 echo ""
-if [ $ERRORS -eq 0 ]; then
-    echo -e "${GREEN}✅ All checks passed!${NC}"
-    echo ""
-    echo "Quick commands available:"
-    echo "  ${GREEN}mcp-start <project>${NC} - Start MCP server"
-    echo "  ${GREEN}mcp-test <project>${NC}  - Test interactively"
-    echo "  ${GREEN}mcp-quick-test${NC}      - Verify installation"
-    echo ""
-    echo "Everything is pre-configured. You never need to access ~/mcp-servers directly."
-    echo ""
-    echo "With Claude.ai: Just describe what you want to do with your project files."
-    echo ""
-    echo "Don't forget: ${GREEN}source ~/.bashrc${NC}"
-    echo ""
-    echo "Documentation: ${GREEN}~/mcp-servers/README.md${NC}"
+echo "📖 Documentation:"
+echo -e "  ${GREEN}$SCRIPT_DIR/README.md${NC}      - Full documentation"
+echo ""
+
+if [ "$CLAUDE_DETECTED" = true ]; then
+    echo "🤖 Ready to use with Claude Code!"
+    echo -e "   Run ${BLUE}claude${NC} in any project directory after creating CLAUDE.md"
 else
-    echo -e "${RED}❌ $ERRORS checks failed${NC}"
-    echo "Please fix the issues above and run this script again."
+    echo "💡 Next Steps:"
+    echo "   • Install Claude Code CLI for best experience"
+    echo "   • Or use manual integration with CLAUDE.md files"
 fi
-EOF
 
-chmod +x verify-setup.sh
-
-# Final instructions
-echo -e "\n${GREEN}🎉 Setup complete!${NC}"
 echo ""
-echo -e "${YELLOW}MCP Server Setup Complete${NC}"
+echo -e "${YELLOW}⚠️  Important:${NC} Run ${GREEN}source ~/.bash_aliases${NC} to activate commands"
 echo ""
-echo "Everything has been configured automatically in ~/mcp-servers/"
-echo "You never need to access that directory directly."
-echo ""
-echo "Available commands:"
-echo "  ${GREEN}mcp-start <project-path>${NC}  - Start MCP server for a project"
-echo "  ${GREEN}mcp-test <project-path>${NC}   - Test MCP server interactively"
-echo "  ${GREEN}mcp-quick-test${NC}            - Verify the installation"
-echo "  ${GREEN}new-claude <directory>${NC}    - Create CLAUDE.md for a project"
-echo ""
-echo "Usage examples:"
-echo "  mcp-start ~/projects/MyApp"
-echo "  mcp-test ~/projects/MyApp"
-echo "  new-claude ~/projects/MyApp"
-echo ""
-echo "With Claude.ai:"
-echo "  Just describe what you want: 'Show me the structure of my project at /home/user/project'"
-echo ""
-echo -e "${YELLOW}IMPORTANT:${NC} Run this command to activate the shortcuts:"
-echo -e "  ${GREEN}source ~/.bashrc${NC}"
-echo ""
-echo "Documentation: ~/mcp-servers/README.md"
-echo ""
-echo -e "${GREEN}That's it! Everything is ready to use. 🚀${NC}"
+echo "Happy coding with Claude! 🚀"

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Claude Code Setup Script
-# Sets up Claude Code environment and project creation tools
+# Claude Project Creator - Core Setup Script
+# Sets up the new-claude command for creating intelligent project templates
 
 set -e
 
-echo "Setting up Claude Code development environment..."
+echo "Setting up Claude Project Creator..."
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -16,135 +16,116 @@ NC='\033[0m' # No Color
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Step 1: Install prerequisites
-echo -e "\n${YELLOW}Step 1: Installing prerequisites...${NC}"
+# Step 1: Install prerequisites (if not already done)
+echo -e "\n${YELLOW}Step 1: Checking prerequisites...${NC}"
 if [ -f "$SCRIPT_DIR/install-prerequisites.sh" ]; then
-    echo "Running prerequisites installation..."
+    echo "Running prerequisites check..."
     "$SCRIPT_DIR/install-prerequisites.sh"
 else
-    echo "Prerequisites script not found. Running inline installation..."
-    # Inline prerequisites installation if script is missing
-    sudo apt-get update
+    echo "Prerequisites script not found. Checking manually..."
     if ! command -v node &> /dev/null; then
-        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-        sudo apt-get install -y nodejs
+        echo -e "${RED}Node.js not found. Please install Node.js first.${NC}"
+        exit 1
     fi
     if ! command -v python3 &> /dev/null; then
-        sudo apt-get install -y python3 python3-pip python3-venv
+        echo -e "${RED}Python3 not found. Please install Python3 first.${NC}"
+        exit 1
     fi
 fi
-echo -e "${GREEN}✓ Prerequisites installed${NC}"
+echo -e "${GREEN}✓ Prerequisites checked${NC}"
 
-# Step 2: Set up MCP server (for IDE/Desktop Claude integration)
-echo -e "\n${YELLOW}Step 2: Setting up MCP server...${NC}"
+# Step 1.5: Install Claude Code CLI if not present
+echo -e "\n${YELLOW}Step 1.5: Checking Claude Code CLI...${NC}"
+if command -v claude &> /dev/null; then
+    echo -e "${GREEN}✓ Claude Code CLI already installed${NC}"
+else
+    echo "Claude Code CLI not found. Installing..."
+    
+    # Check if npm is available
+    if command -v npm &> /dev/null; then
+        echo "Installing Claude Code CLI via npm..."
+        npm install -g @anthropic-ai/claude-code
+        
+        if command -v claude &> /dev/null; then
+            echo -e "${GREEN}✓ Claude Code CLI installed successfully${NC}"
+        else
+            echo -e "${YELLOW}! Claude Code CLI installation may have failed${NC}"
+            echo "Please visit https://claude.ai/code for manual installation instructions"
+        fi
+    else
+        echo -e "${YELLOW}! npm not found. Cannot auto-install Claude Code CLI${NC}"
+        echo "Please install Node.js/npm first, or visit https://claude.ai/code for installation instructions"
+    fi
+fi
+
+# Step 2: Set up new-claude command
+echo -e "\n${YELLOW}Step 2: Installing new-claude command...${NC}"
+
+# Create ~/.bash_aliases if it doesn't exist
+if [ ! -f ~/.bash_aliases ]; then
+    touch ~/.bash_aliases
+    echo -e "${GREEN}✓ Created ~/.bash_aliases${NC}"
+fi
+
+# Add new-claude alias to ~/.bash_aliases
+if [ -f "$SCRIPT_DIR/new-claude.py" ]; then
+    if ! grep -q "alias new-claude=" ~/.bash_aliases 2>/dev/null; then
+        {
+            echo ""
+            echo "# Claude Project Creator"
+            echo "alias new-claude='python3 $SCRIPT_DIR/new-claude.py'"
+        } >> ~/.bash_aliases
+        echo -e "${GREEN}✓ Added new-claude command to ~/.bash_aliases${NC}"
+    else
+        echo -e "${YELLOW}✓ new-claude command already exists in ~/.bash_aliases${NC}"
+        echo -e "${YELLOW}Note: If upgrading from shell version, manually remove old alias and re-run setup${NC}"
+    fi
+else
+    echo -e "${RED}! new-claude.py not found${NC}"
+    exit 1
+fi
+
+# Step 3: Optional MCP Server setup (for Desktop Claude integration)
+echo -e "\n${YELLOW}Step 3: Checking MCP server setup...${NC}"
 if [ -f "$SCRIPT_DIR/mcp/setup-mcp-server.sh" ]; then
-    echo "Running MCP server setup..."
-    "$SCRIPT_DIR/mcp/setup-mcp-server.sh"
+    echo "MCP server setup available."
+    echo "Note: MCP server is for Claude Desktop integration (optional)."
+    echo "Run mcp/setup-mcp-server.sh separately if needed."
+    echo -e "${GREEN}✓ MCP setup available (optional)${NC}"
 else
-    echo -e "${YELLOW}! MCP setup script not found, skipping MCP server setup${NC}"
+    echo -e "${YELLOW}! MCP setup not available (this is fine for most users)${NC}"
 fi
 
-# Step 3: Set up new-claude command
-echo -e "\n${YELLOW}Step 3: Setting up new-claude command...${NC}"
-LOCAL_BIN="$HOME/.local/bin"
-mkdir -p "$LOCAL_BIN"
-
-# Ensure ~/.local/bin is in PATH
-if ! echo "$PATH" | grep -q "$LOCAL_BIN"; then
-    echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> ~/.bashrc
-    echo -e "${GREEN}✓ Added ~/.local/bin to PATH in ~/.bashrc${NC}"
-fi
-
-# Create new-claude command
-if [ -f "$SCRIPT_DIR/new-claude.sh" ]; then
-    # Create a wrapper script that calls the actual new-claude.sh
-    cat > "$LOCAL_BIN/new-claude" << EOF
-#!/bin/bash
-exec "$SCRIPT_DIR/new-claude.sh" "\$@"
-EOF
-    chmod +x "$LOCAL_BIN/new-claude"
-    echo -e "${GREEN}✓ Created new-claude command${NC}"
+# Step 4: Verify template system
+echo -e "\n${YELLOW}Step 4: Verifying template system...${NC}"
+if [ -d "$SCRIPT_DIR/prompt_rules" ]; then
+    template_count=$(find "$SCRIPT_DIR/prompt_rules" -name "*.md" | wc -l)
+    echo -e "${GREEN}✓ Found $template_count template files${NC}"
 else
-    echo -e "${RED}! new-claude.sh not found${NC}"
+    echo -e "${RED}! Template directory not found${NC}"
+    exit 1
 fi
-
-# Step 4: Create documentation
-echo -e "\n${YELLOW}Step 4: Creating documentation...${NC}"
-cat > "$HOME/claude-setup-guide.md" << 'EOF'
-# Claude Code Setup Guide
-
-## Available Commands
-
-### Project Creation
-- `new-claude <directory>` - Create customized CLAUDE.md for a project
-  - For new projects: `new-claude my-project` (creates directory)
-  - For existing projects: `new-claude /path/to/existing`
-
-### MCP Server (for IDE/Desktop Claude integration)
-- `mcp-start <project-path>` - Start MCP server for a project
-- `mcp-test <project-path>` - Test MCP server interactively
-- `mcp-quick-test` - Verify MCP installation
-
-## Creating Project Guidelines
-
-The `new-claude` command helps you create customized CLAUDE.md files by:
-1. Asking about your tech stack (language, framework, cloud, databases)
-2. Combining relevant templates from the modular rule system
-3. Creating a comprehensive guidelines file for Claude to follow
-
-## Templates
-
-The prompt rules are modular and cover:
-- **Base**: General development principles (always included)
-- **Languages**: Python, JavaScript, TypeScript, etc.
-- **Frameworks**: React, Django, Express, etc.
-- **Cloud**: AWS, GCP, Azure, etc.
-- **Databases**: PostgreSQL, MongoDB, Redis, etc.
-
-## Usage Examples
-
-```bash
-# Create new project with guidelines
-new-claude my-web-app
-
-# Add guidelines to existing project
-new-claude /home/user/existing-project
-
-# Start MCP server for IDE integration
-mcp-start /home/user/my-project
-
-# Test MCP server
-mcp-test /home/user/my-project
-```
-
-## Integration
-
-- **Claude Code CLI**: Already has equivalent functionality built-in
-- **Claude Desktop**: Use MCP server for project access
-- **IDEs**: Use MCP server for Claude integration
-
-## Next Steps
-
-1. Run `new-claude --help` to see usage options
-2. Create CLAUDE.md files for your projects
-3. Use MCP server if you need IDE/Desktop integration
-
-Remember to run `source ~/.bashrc` to refresh your shell!
-EOF
-
-echo -e "${GREEN}✓ Created setup guide at ~/claude-setup-guide.md${NC}"
 
 # Final summary
-echo -e "\n${GREEN}🎉 Claude Code setup completed!${NC}"
+echo -e "\n${GREEN}🎉 Claude Project Creator setup completed!${NC}"
 echo ""
 echo "Available commands:"
-echo "  ${GREEN}new-claude <directory>${NC}    - Create CLAUDE.md for a project"
-echo "  ${GREEN}mcp-start <project-path>${NC}  - Start MCP server (IDE integration)"
-echo "  ${GREEN}mcp-test <project-path>${NC}   - Test MCP server interactively"
-echo "  ${GREEN}mcp-quick-test${NC}            - Verify MCP installation"
+echo -e "  ${GREEN}new-claude <directory>${NC}    - Create project with AI guidelines"
+
+# Show MCP commands if available
+if [ -f "$SCRIPT_DIR/mcp/setup-mcp-server.sh" ]; then
+    echo ""
+    echo "Optional MCP commands (for Desktop Claude):"
+    echo -e "  ${GREEN}mcp-start <project-path>${NC}  - Start MCP server"
+    echo -e "  ${GREEN}mcp-test <project-path>${NC}   - Test MCP server"
+    echo -e "  ${GREEN}mcp-quick-test${NC}            - Verify MCP installation"
+    echo ""
+    echo -e "${YELLOW}Note:${NC} Run ./mcp/setup-mcp-server.sh to set up MCP integration"
+fi
+
 echo ""
-echo "Documentation: ${GREEN}~/claude-setup-guide.md${NC}"
+echo -e "Documentation: ${GREEN}$SCRIPT_DIR/README.md${NC}"
 echo ""
-echo "Remember to run: ${GREEN}source ~/.bashrc${NC}"
+echo -e "Remember to run: ${GREEN}source ~/.bash_aliases${NC}"
 echo ""
-echo "Start creating better projects with Claude! 🚀"
+echo "Start creating intelligent projects with Claude! 🚀"

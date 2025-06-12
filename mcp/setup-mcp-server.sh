@@ -178,37 +178,19 @@ echo "  mcp-test <project-path>"
 EOF
 chmod +x "$MCP_SERVERS_DIR/quick-test.sh"
 
-# Step 6: Create command-line shortcuts
-echo -e "\n${YELLOW}Step 6: Creating command shortcuts...${NC}"
-LOCAL_BIN="$HOME/.local/bin"
-mkdir -p "$LOCAL_BIN"
+# Step 6: Create MCP command aliases
+echo -e "\n${YELLOW}Step 6: Creating MCP command aliases...${NC}"
 
-# Ensure ~/.local/bin is in PATH
-if ! echo "$PATH" | grep -q "$LOCAL_BIN"; then
-    echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> ~/.bashrc
-    echo -e "${GREEN}✓ Added ~/.local/bin to PATH in ~/.bashrc${NC}"
-fi
+# Add MCP aliases to ~/.bash_aliases
+{
+    echo ""
+    echo "# MCP server commands"
+    echo "alias mcp-start='$MCP_SERVERS_DIR/start-mcp-server.sh'"
+    echo "alias mcp-test='$MCP_SERVERS_DIR/test-mcp-server.sh'"
+    echo "alias mcp-quick-test='$MCP_SERVERS_DIR/quick-test.sh'"
+} >> ~/.bash_aliases
 
-# Create mcp-start command
-cat > "$LOCAL_BIN/mcp-start" << 'EOF'
-#!/bin/bash
-exec "$HOME/mcp-servers/start-mcp-server.sh" "$@"
-EOF
-chmod +x "$LOCAL_BIN/mcp-start"
-
-# Create mcp-test command
-cat > "$LOCAL_BIN/mcp-test" << 'EOF'
-#!/bin/bash
-exec "$HOME/mcp-servers/test-mcp-server.sh" "$@"
-EOF
-chmod +x "$LOCAL_BIN/mcp-test"
-
-# Create mcp-quick-test command
-cat > "$LOCAL_BIN/mcp-quick-test" << 'EOF'
-#!/bin/bash
-exec "$HOME/mcp-servers/quick-test.sh"
-EOF
-chmod +x "$LOCAL_BIN/mcp-quick-test"
+echo -e "${GREEN}✓ Added MCP aliases to ~/.bash_aliases${NC}"
 
 echo -e "${GREEN}✓ Created MCP command shortcuts${NC}"
 
@@ -280,4 +262,4 @@ echo ""
 echo "MCP server files installed to: ${GREEN}$MCP_SERVERS_DIR${NC}"
 echo "Documentation: ${GREEN}$MCP_SERVERS_DIR/README.md${NC}"
 echo ""
-echo "Remember to run: ${GREEN}source ~/.bashrc${NC}"
+echo "Remember to run: ${GREEN}source ~/.bash_aliases${NC}"
