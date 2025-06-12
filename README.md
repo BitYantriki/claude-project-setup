@@ -1,76 +1,142 @@
-# Claude Code Setup
+# Claude Project Setup
 
-This component sets up Claude Code with MCP (Model Context Protocol) server integration for development projects.
+A comprehensive toolkit for setting up Claude Code development environment and creating project-specific AI guidelines.
 
 ## What it does
 
-- Installs prerequisites (Node.js, Python packages)
-- Sets up MCP server for IntelliJ/IDE integration
-- Creates helper commands for project management
-- Installs `new-claude` command for generating project-specific CLAUDE.md files
+- **Project Creation**: Interactive `new-claude` command for generating customized CLAUDE.md files
+- **Modular Templates**: Language/framework-specific AI guidelines that combine intelligently
+- **MCP Server Setup**: Optional MCP server for IDE/Desktop Claude integration
+- **Prerequisites Management**: Automated installation of required dependencies
 
-## Files
+## Directory Structure
 
-- `setup-all.sh` - Main setup script that orchestrates everything
-- `install-prerequisites.sh` - Installs required dependencies
-- `setup-claude-code.sh` - Sets up MCP server and helper commands
-- `new-claude.sh` - Interactive tool to create CLAUDE.md files for projects
-- `prompt_rules/` - Modular templates for different languages/frameworks/tools
-- `intellij-mcp-server.js` - MCP server for IDE integration
-- `verify-setup.sh` - Validates the installation
+```
+claude-project-setup/
+├── setup-all.sh              # Main setup script
+├── setup-claude-code.sh      # Core Claude setup
+├── install-prerequisites.sh  # Dependencies installation
+├── new-claude.sh             # Project CLAUDE.md generator
+├── prompt_rules/             # Modular AI guideline templates
+│   ├── base.md              # General development principles
+│   ├── languages/           # Python, JavaScript, TypeScript, etc.
+│   ├── frameworks/          # React, Django, Express, etc.
+│   ├── cloud/               # AWS, GCP, Azure, etc.
+│   ├── databases/           # PostgreSQL, MongoDB, Redis, etc.
+│   └── caching/             # Redis, Memcached, etc.
+└── mcp/                     # MCP server components (optional)
+    ├── setup-mcp-server.sh # MCP server setup
+    ├── intellij-mcp-server.js
+    ├── mcp-test-client.py
+    └── verify-setup*.sh
+```
 
-## Setup
+## Quick Setup
 
-Run the main setup script:
 ```bash
-cd components/claude-setup
 ./setup-all.sh
 ```
 
-This will:
-1. Install prerequisites (Node.js, Python packages)
-2. Set up MCP server and helper commands
-3. Install the `new-claude` command
-4. Add aliases to your shell
+This installs everything you need:
+1. Prerequisites (Node.js, Python)
+2. `new-claude` command for project creation
+3. MCP server for IDE/Desktop Claude integration
+4. Command-line shortcuts
 
-## Usage
+## Core Features
 
-After setup, you'll have these commands available:
+### 🎯 Project Creation with `new-claude`
 
-- `mcp-start <project-path>` - Start MCP server for a project
-- `mcp-test <project-path>` - Test MCP server interactively  
-- `mcp-quick-test` - Verify the installation
-- `new-claude <directory>` - Create customized CLAUDE.md for a project
-
-## Creating Project Guidelines
-
-Use the `new-claude` command to create customized CLAUDE.md files:
+Create intelligent CLAUDE.md files tailored to your tech stack:
 
 ```bash
-# Create new project with CLAUDE.md
-new-claude my-new-project
+# Create new project with guidelines
+new-claude my-web-app
 
-# Add CLAUDE.md to existing project
+# Add guidelines to existing project  
 new-claude /path/to/existing/project
 ```
 
-The tool will ask about your tech stack and generate a CLAUDE.md file combining relevant guidelines from the modular templates.
+**Interactive Process:**
+1. Select programming language (Python, JavaScript, TypeScript, etc.)
+2. Choose framework (React, Django, Express, etc.)
+3. Pick cloud platform (AWS, GCP, Azure, etc.)
+4. Select databases (PostgreSQL, MongoDB, Redis, etc.)
+5. Choose caching solutions
 
-## Templates
+The tool combines relevant templates into a comprehensive CLAUDE.md file.
 
-The `prompt_rules/` directory contains modular templates:
+### 📋 Modular Template System
 
-- `base.md` - General development principles (always included)
-- `languages/` - Language-specific guidelines (Python, JavaScript, TypeScript, etc.)
-- `frameworks/` - Framework-specific rules (React, Django, Express, etc.)
-- `cloud/` - Cloud platform guidelines (AWS, GCP, etc.)
-- `databases/` - Database-specific practices (PostgreSQL, MongoDB, etc.)
-- `caching/` - Caching solutions (Redis, etc.)
+Templates are organized by category:
+- **`base.md`** - Universal development principles
+- **`languages/`** - Language-specific best practices  
+- **`frameworks/`** - Framework conventions and patterns
+- **`cloud/`** - Cloud platform guidelines
+- **`databases/`** - Database-specific practices
+- **`caching/`** - Caching strategies and tools
+
+### 🔌 MCP Server (Optional)
+
+For IDE/Desktop Claude integration:
+
+```bash
+# Start MCP server for a project
+mcp-start /path/to/project
+
+# Test interactively
+mcp-test /path/to/project
+
+# Verify installation
+mcp-quick-test
+```
+
+**Note**: Claude Code CLI already provides equivalent functionality built-in.
+
+## Available Commands
+
+After setup:
+- `new-claude <directory>` - Create project-specific CLAUDE.md
+- `mcp-start <project-path>` - Start MCP server (IDE integration)
+- `mcp-test <project-path>` - Test MCP server interactively
+- `mcp-quick-test` - Verify MCP installation
+
+## Use Cases
+
+### For Claude Code CLI Users
+- Use `new-claude` to create project-specific guidelines
+- Skip MCP server (redundant with Claude Code's built-in capabilities)
+
+### For Claude Desktop Users  
+- Use `new-claude` for project guidelines
+- Use MCP server for direct project file access
+
+### For IDE Integration
+- Set up MCP server for Claude integration in your IDE
+- Use `new-claude` for consistent project conventions
+
+## Examples
+
+```bash
+# Full-stack React + Node.js project
+new-claude my-fullstack-app
+# -> Combines: base + JavaScript + React + Express + PostgreSQL rules
+
+# Python data science project  
+new-claude data-analysis
+# -> Combines: base + Python + Django + AWS + PostgreSQL rules
+
+# Existing project
+new-claude /home/user/legacy-project
+# -> Adds CLAUDE.md to existing codebase
+```
 
 ## Requirements
 
-- Ubuntu/Debian-based system
+- Linux/macOS with Bash
 - Internet connection for package downloads
-- Bash shell
+- sudo privileges for prerequisite installation
 
-For more detailed information about the MCP server functionality and advanced usage, see the original README sections below.
+## Documentation
+
+After setup, see `~/claude-setup-guide.md` for detailed usage instructions.
